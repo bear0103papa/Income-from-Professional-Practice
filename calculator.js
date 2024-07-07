@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     function formatNumber(num) {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return num.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
     }
 
     function updateIncomeTypes() {
@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const baseExemption = 97000;
             const totalExemption = baseExemption * (dependents + 1);
             const salaryDeduction = 262000;
-            const standardDeduction = 218000; // 修正標準扣除額
+            const standardDeduction = 218000;
             let netIncome = amount - totalExemption - salaryDeduction - standardDeduction;
 
             calculationProcess += `計算應稅所得淨額:\n`;
@@ -168,8 +168,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // 計算月平均稅額
                 const monthlyTax = Math.floor(tax / 12);
                 calculationProcess += `月平均應扣稅額: ${formatNumber(monthlyTax)} 元\n`;
-                tax = monthlyTax; // 將稅額設為月平均稅額
+                tax = monthlyTax < 2000 ? 0 : monthlyTax; // 將稅額設為月平均稅額，若低於2000元則為0
+                calculationProcess += `最終應扣稅額: ${formatNumber(tax)} 元\n`;
             }
+
+            // 薪資-固定薪資（有填免稅額申報表）項目的二代健保補充保費為0
+            healthInsurance = 0;
+            calculationProcess += `\n薪資-固定薪資（有填免稅額申報表）項目不需繳納二代健保補充保費\n`;
         } else if (special === true) {
             // 處理退職所得-一次領取的特殊情況
             const years = prompt("請輸入退職服務年資：");
@@ -209,12 +214,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // 計算二代健保補充保費
-        if (healthStatus === 'normal' && amount >= 20000) {
+        if (healthStatus === 'normal' && amount >= 20000 && incomeType !== "薪資-固定薪資（有填免稅額申報表）") {
             healthInsurance = amount * 0.0211;
-            if (incomeType === "薪資-固定薪資（有填免稅額申報表）") {
-                healthInsurance /= 12; // 如果是月薪，則計算每月的補充保費
-            }
-            calculationProcess += `\n二代健保補充保費 = ${formatNumber(healthInsurance)} 元\n`;
+            calculationProcess += `\n二代健保補充保費 = ${formatNumber(amount)} * 2.11% = ${formatNumber(healthInsurance)} 元\n`;
         } else {
             calculationProcess += `\n不需繳納二代健保補充保費\n`;
         }
@@ -241,7 +243,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
         resultDiv.style.display = 'block';
         calculationDiv.style.display = 'block';
+        document.getElementById('downloadBtn').style.display = 'block';
     }
+
+document.getElementById('downloadBtn').addEventListener('click', function() {
+        const element = document.body;
+        html2canvas(element).then(function(canvas) {
+            const link = document.createElement('a');
+            link.download = '扣繳計算結果.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    });
 
     updateAmountLabel();
 });
