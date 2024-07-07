@@ -21,19 +21,37 @@
                 <!-- 選項將由JavaScript動態生成 -->
             </select>
 
+            <label for="healthStatus">選擇健保身份：</label>
+            <select id="healthStatus" required>
+                <option value="normal">一般身份（需繳交二代健保補充保費）</option>
+                <option value="special">特殊身份</option>
+            </select>
+
+            <div id="specialHealthInfo" style="display: none;">
+                <p>以下特殊身份得免繳交補充保費：</p>
+                <ol>
+                    <li>無投保資格者、第 5 類被保險人(低收入戶)之 6 項所得(或收入)皆免扣取。</li>
+                    <li>第 2 類被保險人之薪資所得（無一定雇主或自營作業者，工作報酬不固定）。</li>
+                    <li>專門職業及技術人員自行執業者(以執行業務所得為投保金額)、自營作業而參加職業工會者(以執行業務所得為投保金額)之執行業務收入。</li>
+                </ol>
+            </div>
+
             <label for="amount">給付金額：</label>
             <input type="number" id="amount" required min="0" step="1">
-
-            <button type="submit">計算</button>
         </form>
 
-<div id="result" style="display: none;">
-    <h2>計算結果</h2>
-    <p>所得金額: <span id="income"></span> 元</p>
-    <p>應扣繳稅額: <span id="incomeTax"></span> 元</p>
-    <p>二代健保補充保費: <span id="healthInsurance"></span> 元</p>
-    <p>實際支付金額: <span id="actualPayment"></span> 元</p>
-</div>
+        <div id="result" style="display: none;">
+            <h2>計算結果</h2>
+            <p>所得金額: <span id="income"></span> 元</p>
+            <p>應扣繳稅額: <span id="incomeTax"></span> 元</p>
+            <p>二代健保補充保費: <span id="healthInsurance"></span> 元</p>
+            <p>實際支付金額: <span id="actualPayment"></span> 元</p>
+        </div>
+
+        <div id="calculation" style="display: none;">
+            <h2>計算過程</h2>
+            <pre id="calculationProcess"></pre>
+        </div>
     </div>
 
     <script src="calculator.js"></script>
