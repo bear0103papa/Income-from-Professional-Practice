@@ -12,20 +12,13 @@
         <form id="calculatorForm">
             <label for="status">選擇身份：</label>
             <select id="status" required>
-                <option value="resident">居住者</option>
-                <option value="non-resident">非居住者</option>
+                <option value="resident">中華民國境內居住之個人或停留合計滿183天外國人</option>
+                <option value="non-resident">非中華民國境內居住之個人或停留合計未滿183天外國人</option>
             </select>
 
-            <label for="category">選擇申報類別：</label>
-            <select id="category" required>
-                <option value="normal">一般申報</option>
-                <option value="special">個人稿費、版稅等(每次給付額不超過5000元)</option>
-            </select>
-
-            <label for="healthStatus">選擇健保身份：</label>
-            <select id="healthStatus" required>
-                <option value="normal">一般身份（需扣二代健保）</option>
-                <option value="special">特殊身份</option>
+            <label for="incomeType">選擇所得類別：</label>
+            <select id="incomeType" required>
+                <!-- 選項將由JavaScript動態生成 -->
             </select>
 
             <label for="amount">給付金額：</label>
@@ -37,8 +30,7 @@
         <div id="result" style="display: none;">
             <h2>計算結果</h2>
             <p>所得金額: <span id="income"></span> 元</p>
-            <p>代扣所得稅: <span id="incomeTax"></span> 元</p>
-            <p>代扣二代健保補充保費: <span id="healthInsurance"></span> 元</p>
+            <p>應扣繳稅額: <span id="incomeTax"></span> 元</p>
             <p>實際支付金額: <span id="actualPayment"></span> 元</p>
         </div>
     </div>
