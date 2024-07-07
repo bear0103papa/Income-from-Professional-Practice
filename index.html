@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>廖美倫工商記帳士事務所 各類所得扣繳計算器</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
 </head>
 <body>
+    <div class="stars"></div>
+    <div class="twinkling"></div>
+    <div class="clouds"></div>
     <div class="container">
         <h1>廖美倫工商記帳士事務所<br>各類所得扣繳計算器</h1>
         <form id="calculatorForm">
@@ -44,6 +47,8 @@
 
             <label for="amount" id="amountLabel">給付金額：</label>
             <input type="text" id="amount" required>
+
+            <button type="button" id="calculateBtn">計算</button>
         </form>
 
         <div id="result" style="display: none;">
@@ -59,7 +64,7 @@
             <pre id="calculationProcess"></pre>
         </div>
 
-        <button id="downloadBtn" style="display: none;">下載計算結果圖片</button>
+        <div id="imageResult" style="display: none;"></div>
 
         <div id="contactInfo">
             <p>我們是一家擁有逾27年豐富經驗，由經過專業執照認證記帳士事務所，專注於提供高品質的稅務諮詢服務。</p>
