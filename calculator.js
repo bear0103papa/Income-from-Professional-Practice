@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const dependentsDiv = document.getElementById('dependentsDiv');
     const dependentsInput = document.getElementById('dependents');
     const amountLabel = document.getElementById('amountLabel');
+    const calculateBtn = document.getElementById('calculateBtn');
 
     const incomeTypes = {
         resident: {
@@ -44,8 +45,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    function formatNumber(num) {
-        return num.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+    function formatNumber(num, isProgressive = false) {
+        if (isProgressive) {
+            return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        } else {
+            return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
     }
 
     function updateIncomeTypes() {
@@ -57,14 +62,15 @@ document.addEventListener('DOMContentLoaded', function() {
             option.textContent = type;
             incomeTypeSelect.appendChild(option);
         });
-        calculateTax();
     }
 
     function updateAmountLabel() {
         if (incomeTypeSelect.value === "薪資-固定薪資（有填免稅額申報表）") {
             amountLabel.textContent = "員工薪資（月薪）：";
+            dependentsDiv.style.display = 'block';
         } else {
             amountLabel.textContent = "給付金額：";
+            dependentsDiv.style.display = 'none';
         }
     }
 
@@ -73,26 +79,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     healthStatusSelect.addEventListener('change', function() {
         specialHealthInfo.style.display = this.value === 'special' ? 'block' : 'none';
-        calculateTax();
     });
 
-    incomeTypeSelect.addEventListener('change', function() {
-        if (this.value === "薪資-固定薪資（有填免稅額申報表）") {
-            dependentsDiv.style.display = 'block';
-        } else {
-            dependentsDiv.style.display = 'none';
-        }
-        updateAmountLabel();
-        calculateTax();
-    });
-
-    [amountInput, dependentsInput].forEach(input => {
-        input.addEventListener('input', calculateTax);
-    });
+    incomeTypeSelect.addEventListener('change', updateAmountLabel);
 
     amountInput.addEventListener('blur', function() {
         this.value = formatNumber(parseFloat(this.value.replace(/,/g, '')));
     });
+
+    calculateBtn.addEventListener('click', calculateTax);
 
     function calculateTax() {
         const status = statusSelect.value;
@@ -109,10 +104,12 @@ document.addEventListener('DOMContentLoaded', function() {
         let healthInsurance = 0;
         let calculationProcess = '';
 
-        if (incomeType === "薪資-固定薪資（有填免稅額申報表）") {
-            calculationProcess += `員工薪資（月薪）: ${formatNumber(amount)} 元\n`;
+        const isProgressive = incomeType === "薪資-固定薪資（有填免稅額申報表）";
+
+        if (isProgressive) {
+            calculationProcess += `員工薪資（月薪）: ${formatNumber(amount, true)} 元\n`;
             amount *= 12;
-            calculationProcess += `年薪 (月薪 * 12): ${formatNumber(amount)} 元\n\n`;
+            calculationProcess += `年薪 (月薪 * 12): ${formatNumber(amount, true)} 元\n\n`;
         } else {
             calculationProcess += `給付金額: ${formatNumber(amount)} 元\n`;
         }
@@ -126,9 +123,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             calculationProcess += `計算應稅所得淨額:\n`;
             calculationProcess += `受扶養親屬人數: ${dependents}\n`;
-            calculationProcess += `總免稅額: ${formatNumber(baseExemption)} * (${dependents} + 1) = ${formatNumber(totalExemption)} 元\n`;
+            calculationProcess += `總免稅額: ${formatNumber(baseExemption, true)} * (${dependents} + 1) = ${formatNumber(totalExemption, true)} 元\n`;
             calculationProcess += `年薪 - 總免稅額 - 薪資扣除額 - 標準扣除額\n`;
-            calculationProcess += `${formatNumber(amount)} - ${formatNumber(totalExemption)} - ${formatNumber(salaryDeduction)} - ${formatNumber(standardDeduction)} = ${formatNumber(netIncome)} 元\n\n`;
+            calculationProcess += `${formatNumber(amount, true)} - ${formatNumber(totalExemption, true)} - ${formatNumber(salaryDeduction, true)} - ${formatNumber(standardDeduction, true)} = ${formatNumber(netIncome, true)} 元\n\n`;
 
             if (netIncome <= 0) {
                 tax = 0;
@@ -152,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         let taxInThisBracket = taxableInThisBracket * bracket.rate;
                         tax += taxInThisBracket;
 
-                        calculationProcess += `${formatNumber(previousLimit)} 到 ${formatNumber(bracket.limit)} 之間的所得: ${formatNumber(taxableInThisBracket)} 元, 稅率 ${bracket.rate * 100}%, 稅額 ${formatNumber(taxInThisBracket)} 元\n`;
+                        calculationProcess += `${formatNumber(previousLimit, true)} 到 ${formatNumber(bracket.limit, true)} 之間的所得: ${formatNumber(taxableInThisBracket, true)} 元, 稅率 ${bracket.rate * 100}%, 稅額 ${formatNumber(taxInThisBracket, true)} 元\n`;
 
                         remainingIncome -= taxableInThisBracket;
                         previousLimit = bracket.limit;
@@ -163,13 +160,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // 完全捨棄法至十位數
                 tax = Math.floor(tax / 10) * 10;
-                calculationProcess += `\n年度稅額 (完全捨棄法至十位數): ${formatNumber(tax)} 元\n`;
+                calculationProcess += `\n年度稅額 (完全捨棄法至十位數): ${formatNumber(tax, true)} 元\n`;
 
                 // 計算月平均稅額
-                const monthlyTax = Math.floor(tax / 12);
-                calculationProcess += `月平均應扣稅額: ${formatNumber(monthlyTax)} 元\n`;
-                tax = monthlyTax < 2000 ? 0 : monthlyTax; // 將稅額設為月平均稅額，若低於2000元則為0
-                calculationProcess += `最終應扣稅額: ${formatNumber(tax)} 元\n`;
+                const monthlyTax = Math.floor(tax / 12 / 10) * 10; // 完全捨去法至十位數
+                calculationProcess += `月平均應扣稅額: ${formatNumber(monthlyTax, true)} 元\n`;
+                tax = monthlyTax < 2000 ? 0 : monthlyTax;
+                calculationProcess += `最終應扣稅額: ${formatNumber(tax, true)} 元\n`;
             }
 
             // 薪資-固定薪資（有填免稅額申報表）項目的二代健保補充保費為0
@@ -214,47 +211,120 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // 計算二代健保補充保費
-        if (healthStatus === 'normal' && amount >= 20000 && incomeType !== "薪資-固定薪資（有填免稅額申報表）") {
+        if (healthStatus === 'normal' && amount >= 20000 && !isProgressive) {
             healthInsurance = amount * 0.0211;
             calculationProcess += `\n二代健保補充保費 = ${formatNumber(amount)} * 2.11% = ${formatNumber(healthInsurance)} 元\n`;
         } else {
             calculationProcess += `\n不需繳納二代健保補充保費\n`;
         }
 
-        const actualPayment = (incomeType === "薪資-固定薪資（有填免稅額申報表）" ? amount / 12 : amount) - tax - healthInsurance;
-        calculationProcess += `\n實際支付金額 = ${incomeType === "薪資-固定薪資（有填免稅額申報表）" ? "月薪" : "給付金額"} - 應扣繳稅額 - 二代健保補充保費\n`;
-        calculationProcess += `                = ${formatNumber(incomeType === "薪資-固定薪資（有填免稅額申報表）" ? amount / 12 : amount)} - ${formatNumber(tax)} - ${formatNumber(healthInsurance)} = ${formatNumber(actualPayment)} 元`;
+        const actualPayment = (isProgressive ? amount / 12 : amount) - tax - healthInsurance;
+        calculationProcess += `\n實際支付金額 = ${isProgressive ? "月薪" : "給付金額"} - 應扣繳稅額 - 二代健保補充保費\n`;
+        calculationProcess += `                = ${formatNumber(isProgressive ? amount / 12 : amount, isProgressive)} - ${formatNumber(tax, isProgressive)} - ${formatNumber(healthInsurance, isProgressive)} = ${formatNumber(actualPayment, isProgressive)} 元`;
 
         displayResult({
-            income: incomeType === "薪資-固定薪資（有填免稅額申報表）" ? amount / 12 : amount,
+            income: isProgressive ? amount / 12 : amount,
             incomeTax: tax,
             healthInsurance: healthInsurance,
             actualPayment: actualPayment
-        }, calculationProcess);
+        }, calculationProcess, isProgressive);
+
+        generateImage();
     }
 
-    function displayResult(result, calculationProcess) {
-        document.getElementById('income').textContent = formatNumber(result.income);
-        document.getElementById('incomeTax').textContent = formatNumber(result.incomeTax);
-        document.getElementById('healthInsurance').textContent = formatNumber(result.healthInsurance);
-        document.getElementById('actualPayment').textContent = formatNumber(result.actualPayment);
+    function displayResult(result, calculationProcess, isProgressive) {
+        document.getElementById('income').textContent = formatNumber(result.income, isProgressive);
+        document.getElementById('incomeTax').textContent = formatNumber(result.incomeTax, isProgressive);
+        document.getElementById('healthInsurance').textContent = formatNumber(result.healthInsurance, isProgressive);
+        document.getElementById('actualPayment').textContent = formatNumber(result.actualPayment, isProgressive);
 
         document.getElementById('calculationProcess').textContent = calculationProcess;
 
         resultDiv.style.display = 'block';
         calculationDiv.style.display = 'block';
-        document.getElementById('downloadBtn').style.display = 'block';
     }
 
-document.getElementById('downloadBtn').addEventListener('click', function() {
-        const element = document.body;
-        html2canvas(element).then(function(canvas) {
-            const link = document.createElement('a');
-            link.download = '扣繳計算結果.png';
-            link.href = canvas.toDataURL();
-            link.click();
+  function generateImage() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // 設置畫布大小
+        canvas.width = 800;
+        canvas.height = 1200;
+
+        // 繪製背景
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, '#000033');
+        gradient.addColorStop(1, '#000066');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 繪製星星
+        for (let i = 0; i < 200; i++) {
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 設置文字樣式
+        ctx.fillStyle = 'white';
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+
+        // 繪製標題
+        ctx.font = '32px Arial';
+        ctx.fillText('廖美倫工商記帳士事務所', canvas.width / 2, 50);
+        ctx.fillText('各類所得扣繳計算器', canvas.width / 2, 90);
+
+        // 繪製計算結果
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'left';
+        const resultText = [
+            `計算所得類別: ${incomeTypeSelect.value}`,
+            `身份: ${statusSelect.value}`,
+            `健保身份: ${healthStatusSelect.value}`,
+            `${amountLabel.textContent} ${amountInput.value}`,
+            '',
+            '計算結果:',
+            `所得金額: ${document.getElementById('income').textContent} 元`,
+            `應扣繳稅額: ${document.getElementById('incomeTax').textContent} 元`,
+            `二代健保補充保費: ${document.getElementById('healthInsurance').textContent} 元`,
+            `實際支付金額: ${document.getElementById('actualPayment').textContent} 元`,
+        ];
+
+        resultText.forEach((text, index) => {
+            ctx.fillText(text, 50, 150 + index * 30);
         });
-    });
+
+        // 繪製計算過程
+        const process = document.getElementById('calculationProcess').textContent.split('\n');
+        process.forEach((line, index) => {
+            ctx.fillText(line, 50, 450 + index * 25);
+        });
+
+        // 繪製聯絡資訊
+        const contactInfo = [
+            '我們是一家擁有逾27年豐富經驗，由經過專業執照認證記帳士事務所，',
+            '專注於提供高品質的稅務諮詢服務。',
+            '無論您計畫成立新公司，或是尋求穩定可信賴的記帳服務，',
+            '我們誠摯歡迎您在工作日致電我們進行諮詢。',
+            '如需進一步了解我們，請隨時聯繫：',
+            '名稱：廖美倫工商記帳士事務所',
+            '電話：(03)4596769'
+        ];
+
+        ctx.font = '18px Arial';
+        contactInfo.forEach((line, index) => {
+            ctx.fillText(line, 50, 1000 + index * 25);
+        });
+
+        // 顯示圖片
+        const imageResult = document.getElementById('imageResult');
+        imageResult.innerHTML = '';
+        imageResult.appendChild(canvas);
+        imageResult.style.display = 'block';
+    }
 
     updateAmountLabel();
 });
