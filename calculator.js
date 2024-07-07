@@ -64,8 +64,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function calculateTax(status, incomeType, amount) {
         const { rate, threshold, special } = incomeTypes[status][incomeType];
-        let taxableAmount = Math.max(0, amount - threshold);
+        let taxableAmount = 0;
         let tax = 0;
+        let healthInsurance = 0;
 
         if (special && incomeType === "退職所得-一次領取") {
             // 特殊計算方式
@@ -80,20 +81,30 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 taxableAmount = (limit2 - limit1) / 2 + (amount - limit2);
             }
+        } else {
+            // 一般計算方式
+            taxableAmount = amount > threshold ? amount : 0;
         }
 
         tax = taxableAmount * rate;
 
+        // 計算二代健保補充保費
+        if (amount >= 20000) {
+            healthInsurance = amount * 0.0211;
+        }
+
         return {
             income: amount,
             incomeTax: tax,
-            actualPayment: amount - tax
+            healthInsurance: healthInsurance,
+            actualPayment: amount - tax - healthInsurance
         };
     }
 
     function displayResult(result) {
         document.getElementById('income').textContent = result.income.toFixed(2);
         document.getElementById('incomeTax').textContent = result.incomeTax.toFixed(2);
+        document.getElementById('healthInsurance').textContent = result.healthInsurance.toFixed(2);
         document.getElementById('actualPayment').textContent = result.actualPayment.toFixed(2);
 
         resultDiv.style.display = 'block';
