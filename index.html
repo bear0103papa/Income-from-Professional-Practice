@@ -47,8 +47,6 @@
 
             <label for="amount" id="amountLabel">給付金額：</label>
             <input type="text" id="amount" required>
-
-            <button type="button" id="calculateBtn">計算</button>
         </form>
 
         <div id="result" style="display: none;">
@@ -59,10 +57,8 @@
             <p>實際支付金額: <span id="actualPayment"></span> 元</p>
         </div>
 
-        <div id="calculation" style="display: none;">
-            <h2>計算過程</h2>
-            <pre id="calculationProcess"></pre>
-        </div>
+        <button id="generateImageBtn">產生圖片</button>
+        <button id="downloadBtn" style="display: none;">下載圖片</button>
 
         <div id="imageResult" style="display: none;"></div>
 
