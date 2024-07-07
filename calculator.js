@@ -103,8 +103,8 @@ document.addEventListener('DOMContentLoaded', function() {
             calculationProcess += `計算應稅所得淨額:\n`;
             calculationProcess += `受扶養親屬人數: ${dependents}\n`;
             calculationProcess += `總免稅額: ${baseExemption} * (${dependents} + 1) = ${totalExemption} 元\n`;
-            calculationProcess += `給付金額 - 總免稅額 - 薪資扣除額 - 標準扣除額\n`;
-            calculationProcess += `${amount} - ${totalExemption} - ${salaryDeduction} - ${standardDeduction} = ${netIncome} 元\n\n`;
+            calculationProcess += `給付金額(月薪）*12個月 - 總免稅額 - 薪資扣除額 - 標準扣除額\n`;
+            calculationProcess += `${amount}*12 - ${totalExemption} - ${salaryDeduction} - ${standardDeduction} = ${netIncome} 元\n\n`;
 
             if (netIncome <= 0) {
                 tax = 0;
