@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const dependentsDiv = document.getElementById('dependentsDiv');
     const dependentsInput = document.getElementById('dependents');
     const amountLabel = document.getElementById('amountLabel');
+    const amountTypeRadios = document.querySelectorAll('input[name="amountType"]');
+    const generateImageBtn = document.getElementById('generateImageBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
 
     const incomeTypes = {
         resident: {
@@ -73,33 +76,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    statusSelect.addEventListener('change', updateIncomeTypes);
-    updateIncomeTypes();
-
-    healthStatusSelect.addEventListener('change', function() {
-        specialHealthInfo.style.display = this.value === 'special' ? 'block' : 'none';
-        calculateTax();
-    });
-
-    incomeTypeSelect.addEventListener('change', function() {
-        updateAmountLabel();
-        calculateTax();
-    });
-
-    [amountInput, dependentsInput].forEach(input => {
-        input.addEventListener('input', calculateTax);
-    });
-
-    amountInput.addEventListener('blur', function() {
-        this.value = formatNumber(parseFloat(this.value.replace(/,/g, '')));
-    });
-
     function calculateTax() {
         const status = statusSelect.value;
         const incomeType = incomeTypeSelect.value;
         const healthStatus = healthStatusSelect.value;
         let amount = parseFloat(amountInput.value.replace(/,/g, ''));
         const dependents = parseInt(dependentsInput.value) || 0;
+        const amountType = document.querySelector('input[name="amountType"]:checked').value;
 
         if (isNaN(amount)) return;
 
@@ -109,6 +92,11 @@ document.addEventListener('DOMContentLoaded', function() {
         let healthInsurance = 0;
 
         const isProgressive = incomeType === "薪資-固定薪資（有填免稅額申報表）";
+
+        if (amountType === 'actual' && !isProgressive) {
+            // 計算給付金額
+            amount = amount / (1 - rate - (healthStatus === 'normal' ? 0.0211 : 0));
+        }
 
         if (isProgressive) {
             amount *= 12;
@@ -150,6 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             healthInsurance = 0;
+            amount /= 12;  // Convert back to monthly amount for display
         } else if (special === true) {
             const years = prompt("請輸入退職服務年資：");
             const limit1 = 188000 * years;
@@ -174,10 +163,10 @@ document.addEventListener('DOMContentLoaded', function() {
             healthInsurance = amount * 0.0211;
         }
 
-        const actualPayment = (isProgressive ? amount / 12 : amount) - tax - healthInsurance;
+        const actualPayment = amount - tax - healthInsurance;
 
         displayResult({
-            income: isProgressive ? amount / 12 : amount,
+            income: amount,
             incomeTax: tax,
             healthInsurance: healthInsurance,
             actualPayment: actualPayment
@@ -225,6 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `計算所得類別: ${incomeTypeSelect.value}`,
             `身份: ${statusSelect.value}`,
             `健保身份: ${healthStatusSelect.value}`,
+            `給付金額類型: ${document.querySelector('input[name="amountType"]:checked').value === 'contract' ? '合約金額' : '實領金額'}`,
             `${amountLabel.textContent} ${amountInput.value}`,
             '',
             '計算結果:',
@@ -259,12 +249,28 @@ document.addEventListener('DOMContentLoaded', function() {
         imageResult.innerHTML = '';
         imageResult.appendChild(canvas);
         imageResult.style.display = 'block';
-        document.getElementById('downloadBtn').style.display = 'block';
+        downloadBtn.style.display = 'block';
     }
 
-    document.getElementById('generateImageBtn').addEventListener('click', generateImage);
-
-    document.getElementById('downloadBtn').addEventListener('click', function() {
+    statusSelect.addEventListener('change', updateIncomeTypes);
+    incomeTypeSelect.addEventListener('change', function() {
+        updateAmountLabel();
+        calculateTax();
+    });
+    healthStatusSelect.addEventListener('change', function() {
+        specialHealthInfo.style.display = this.value === 'special' ? 'block' : 'none';
+        calculateTax();
+    });
+    amountInput.addEventListener('input', calculateTax);
+    amountInput.addEventListener('blur', function() {
+        this.value = formatNumber(parseFloat(this.value.replace(/,/g, '')));
+    });
+    dependentsInput.addEventListener('input', calculateTax);
+    amountTypeRadios.forEach(radio => {
+        radio.addEventListener('change', calculateTax);
+    });
+    generateImageBtn.addEventListener('click', generateImage);
+    downloadBtn.addEventListener('click', function() {
         const canvas = document.querySelector('#imageResult canvas');
         const link = document.createElement('a');
         link.download = '扣繳計算結果.png';
@@ -272,5 +278,6 @@ document.addEventListener('DOMContentLoaded', function() {
         link.click();
     });
 
+    updateIncomeTypes();
     updateAmountLabel();
 });
