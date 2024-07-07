@@ -21,6 +21,11 @@
                 <!-- 選項將由JavaScript動態生成 -->
             </select>
 
+            <div id="dependentsDiv" style="display: none;">
+                <label for="dependents">受扶養親屬人數：</label>
+                <input type="number" id="dependents" min="0" value="0">
+            </div>
+
             <label for="healthStatus">選擇健保身份：</label>
             <select id="healthStatus" required>
                 <option value="normal">一般身份（需繳交二代健保補充保費）</option>
