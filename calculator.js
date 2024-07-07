@@ -95,7 +95,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (amountType === 'actual' && !isProgressive) {
             // 計算給付金額
-            amount = amount / (1 - rate - (healthStatus === 'normal' ? 0.0211 : 0));
+            let taxRate = amount > threshold ? rate : 0;
+            let healthInsuranceRate = healthStatus === 'normal' && amount >= 20000 ? 0.0211 : 0;
+            
+            if (taxRate === 0 && healthInsuranceRate === 0) {
+                // 如果不需要扣繳稅額和二代健保補充保費，則不需要倒算
+                // Do nothing, keep the amount as is
+            } else {
+                amount = amount / (1 - taxRate - healthInsuranceRate);
+            }
         }
 
         if (isProgressive) {
@@ -236,6 +244,9 @@ document.addEventListener('DOMContentLoaded', function() {
             '如需進一步了解我們，請隨時聯繫：',
             '名稱：廖美倫工商記帳士事務所',
             '電話：(03)4596769',
+            '',
+            '歡迎大家訂閱電子報，以獲取最新的稅務資訊',
+            '訂閱網址：https://bit.ly/4cPFTxs',
             '',
             '本計算結果僅供參考，實際數字仍以法律依據為主'
         ];
