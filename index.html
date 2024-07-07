@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>廖美倫工商記帳士事務所 執行業務所得扣繳計算器</title>
+    <title>廖美倫工商記帳士事務所 各類所得扣繳計算器</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>廖美倫工商記帳士事務所<br>執行業務所得扣繳計算器</h1>
+        <h1>廖美倫工商記帳士事務所<br>各類所得扣繳計算器</h1>
         <form id="calculatorForm">
             <label for="status">選擇身份：</label>
             <select id="status" required>
@@ -41,8 +42,8 @@
                 </ol>
             </div>
 
-<label for="amount" id="amountLabel">給付金額：</label>
-            <input type="number" id="amount" required min="0" step="1">
+            <label for="amount" id="amountLabel">給付金額：</label>
+            <input type="text" id="amount" required>
         </form>
 
         <div id="result" style="display: none;">
@@ -56,6 +57,16 @@
         <div id="calculation" style="display: none;">
             <h2>計算過程</h2>
             <pre id="calculationProcess"></pre>
+        </div>
+
+        <button id="downloadBtn" style="display: none;">下載計算結果圖片</button>
+
+        <div id="contactInfo">
+            <p>我們是一家擁有逾27年豐富經驗，由經過專業執照認證記帳士事務所，專注於提供高品質的稅務諮詢服務。</p>
+            <p>無論您計畫成立新公司，或是尋求穩定可信賴的記帳服務，我們誠摯歡迎您在工作日致電我們進行諮詢。</p>
+            <p>如需進一步了解我們，請隨時聯繫：</p>
+            <p>名稱：<strong>廖美倫工商記帳士事務所</strong></p>
+            <p>電話：(03)4596769</p>
         </div>
     </div>
 
