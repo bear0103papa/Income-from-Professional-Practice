@@ -1,92 +1,151 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>廖美倫工商記帳士事務所 各類所得扣繳計算器</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
-</head>
-<body>
-    <div class="stars"></div>
-    <div class="twinkling"></div>
-    <div class="clouds"></div>
-    <div class="container">
-        <h1>廖美倫工商記帳士事務所<br>各類所得扣繳計算器</h1>
-        <form id="calculatorForm">
-            <label for="status">選擇身份：</label>
-            <select id="status" required>
-                <option value="resident">中華民國境內居住之個人或停留合計滿183天外國人</option>
-                <option value="non-resident">非中華民國境內居住之個人或停留合計未滿183天外國人</option>
-            </select>
+@keyframes move-background {
+  from { transform: translate3d(0px, 0px, 0px); }
+  to { transform: translate3d(1000px, 0px, 0px); }
+}
 
-            <label for="incomeType">選擇所得類別：</label>
-            <select id="incomeType" required>
-                <!-- 選項將由JavaScript動態生成 -->
-            </select>
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    color: #ffffff;
+    background: #000000;
+    font-size: 18px;
+}
 
-            <div id="dependentsDiv" style="display: none;">
-                <label for="dependents">受扶養親屬人數：</label>
-                <input type="number" id="dependents" min="0" value="0">
-            </div>
+.container {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    position: relative;
+    z-index: 3;
+}
 
-            <label for="healthStatus">選擇健保身份：</label>
-            <select id="healthStatus" required>
-                <option value="normal">一般身份（需繳交二代健保補充保費）</option>
-                <option value="special">特殊身份</option>
-            </select>
+h1, h2, h3 {
+    text-align: center;
+    font-size: 2em;
+}
 
-            <div id="specialHealthInfo" style="display: none;">
-                <p>以下特殊身份得免繳交補充保費：</p>
-                <ol>
-                    <li>無投保資格者、第 5 類被保險人(低收入戶)之 6 項所得(或收入)皆免扣取。</li>
-                    <li>第 2 類被保險人之薪資所得（無一定雇主或自營作業者，工作報酬不固定）。</li>
-                    <li>專門職業及技術人員自行執業者(以執行業務所得為投保金額)、自營作業而參加職業工會者(以執行業務所得為投保金額)之執行業務收入。</li>
-                </ol>
-            </div>
+label {
+    display: block;
+    margin: 20px 0 10px;
+    font-size: 1.2em;
+}
 
-            <div id="amountTypeDiv">
-                <label>給付金額類型：</label>
-                <input type="radio" id="contractAmount" name="amountType" value="contract" checked>
-                <label for="contractAmount">合約金額</label>
-                <input type="radio" id="actualAmount" name="amountType" value="actual">
-                <label for="actualAmount">實領金額</label>
-            </div>
+select, input[type="text"], input[type="number"], button {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: #ffffff;
+    font-size: 1.1em;
+    border-radius: 10px;
+}
 
-            <label for="amount" id="amountLabel">給付金額：</label>
-            <input type="text" id="amount" required>
-        </form>
+button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: background 0.3s ease;
+}
 
-        <div id="result" style="display: none;">
-            <h2>計算結果</h2>
-            <p>所得金額: <span id="income"></span> 元</p>
-            <p>應扣繳稅額: <span id="incomeTax"></span> 元</p>
-            <p>二代健保補充保費: <span id="healthInsurance"></span> 元</p>
-            <p>實際支付金額: <span id="actualPayment"></span> 元</p>
-        </div>
+button:hover {
+    background: #45a049;
+}
 
-        <button id="generateImageBtn">產生圖片</button>
-        <button id="downloadBtn" style="display: none;">下載圖片</button>
+#result, #imageResult {
+    margin-top: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    font-size: 1.1em;
+}
 
-        <div id="imageResult" style="display: none;"></div>
+#specialHealthInfo {
+    background: rgba(255, 0, 0, 0.1);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 1em;
+}
 
-        <div id="contactInfo">
-            <p>我們是一家擁有逾27年豐富經驗，由經過專業執照認證記帳士事務所，專注於提供高品質的稅務諮詢服務。</p>
-            <p>無論您計畫成立新公司，或是尋求穩定可信賴的記帳服務，我們誠摯歡迎您在工作日致電我們進行諮詢。</p>
-            <p>如需進一步了解我們，請隨時聯繫：</p>
-            <p>名稱：<strong>廖美倫工商記帳士事務所</strong></p>
-            <p>電話：(03)4596769</p>
-        </div>
+.stars, .twinkling, .clouds {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
 
-        <div id="usefulLinks">
-            <h3>有用連結：</h3>
-            <ul>
-                <li><a href="https://www.etax.nat.gov.tw/etwmain/etw144w/152" target="_blank">各類所得扣繳稅額繳款書</a></li>
-                <li><a href="https://eservice.nhi.gov.tw/2nd/" target="_blank">二代健保補充保費繳款書</a></li>
-            </ul>
-        </div>
-    </div>
+.stars {
+    background: #000 url(http://www.script-tutorials.com/demos/360/images/stars.png) repeat top center;
+    z-index: 0;
+}
 
-    <script src="calculator.js"></script>
-</body>
-</html>
+.twinkling {
+    background: transparent url(http://www.script-tutorials.com/demos/360/images/twinkling.png) repeat top center;
+    z-index: 1;
+    animation: move-background 70s linear infinite;
+}
+
+.clouds {
+    background: transparent url(http://www.script-tutorials.com/demos/360/images/clouds3.png) repeat top center;
+    z-index: 2;
+    opacity: .4;
+    animation: move-background 150s linear infinite;
+}
+
+#contactInfo, #usefulLinks {
+    margin-top: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    font-size: 1em;
+}
+
+#amountTypeDiv {
+    margin-bottom: 20px;
+}
+
+#amountTypeDiv label {
+    display: inline;
+    margin-right: 10px;
+}
+
+#usefulLinks ul {
+    padding-left: 20px;
+}
+
+#usefulLinks a {
+    color: #4CAF50;
+    text-decoration: none;
+}
+
+#usefulLinks a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+    body {
+        font-size: 16px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+
+    h1, h2, h3 {
+        font-size: 1.5em;
+    }
+
+    select, input[type="text"], input[type="number"], button {
+        padding: 10px;
+        font-size: 1em;
+    }
+}
