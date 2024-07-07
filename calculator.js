@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const amountInput = document.getElementById('amount');
     const dependentsDiv = document.getElementById('dependentsDiv');
     const dependentsInput = document.getElementById('dependents');
+    const amountLabel = document.getElementById('amountLabel');
 
     const incomeTypes = {
         resident: {
@@ -55,6 +56,14 @@ document.addEventListener('DOMContentLoaded', function() {
         calculateTax();
     }
 
+    function updateAmountLabel() {
+        if (incomeTypeSelect.value === "薪資-固定薪資（有填免稅額申報表）") {
+            amountLabel.textContent = "員工薪資（月薪）：";
+        } else {
+            amountLabel.textContent = "給付金額：";
+        }
+    }
+
     statusSelect.addEventListener('change', updateIncomeTypes);
     updateIncomeTypes();
 
@@ -69,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             dependentsDiv.style.display = 'none';
         }
+        updateAmountLabel();
         calculateTax();
     });
 
@@ -80,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const status = statusSelect.value;
         const incomeType = incomeTypeSelect.value;
         const healthStatus = healthStatusSelect.value;
-        const amount = parseFloat(amountInput.value);
+        let amount = parseFloat(amountInput.value);
         const dependents = parseInt(dependentsInput.value) || 0;
 
         if (isNaN(amount)) return;
@@ -91,7 +101,13 @@ document.addEventListener('DOMContentLoaded', function() {
         let healthInsurance = 0;
         let calculationProcess = '';
 
-        calculationProcess += `給付金額: ${amount} 元\n`;
+        if (incomeType === "薪資-固定薪資（有填免稅額申報表）") {
+            calculationProcess += `員工薪資（月薪）: ${amount} 元\n`;
+            amount *= 12;
+            calculationProcess += `年薪 (月薪 * 12): ${amount} 元\n\n`;
+        } else {
+            calculationProcess += `給付金額: ${amount} 元\n`;
+        }
 
         if (special === 'progressive') {
             const baseExemption = 97000;
@@ -103,8 +119,8 @@ document.addEventListener('DOMContentLoaded', function() {
             calculationProcess += `計算應稅所得淨額:\n`;
             calculationProcess += `受扶養親屬人數: ${dependents}\n`;
             calculationProcess += `總免稅額: ${baseExemption} * (${dependents} + 1) = ${totalExemption} 元\n`;
-            calculationProcess += `給付金額(月薪）*12個月 - 總免稅額 - 薪資扣除額 - 標準扣除額\n`;
-            calculationProcess += `${amount}*12 - ${totalExemption} - ${salaryDeduction} - ${standardDeduction} = ${netIncome} 元\n\n`;
+            calculationProcess += `年薪 - 總免稅額 - 薪資扣除額 - 標準扣除額\n`;
+            calculationProcess += `${amount} - ${totalExemption} - ${salaryDeduction} - ${standardDeduction} = ${netIncome} 元\n\n`;
 
             if (netIncome <= 0) {
                 tax = 0;
@@ -139,7 +155,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // 完全捨棄法至十位數
                 tax = Math.floor(tax / 10) * 10;
-                calculationProcess += `\n最終稅額 (完全捨棄法至十位數): ${tax} 元\n`;
+                calculationProcess += `\n年度稅額 (完全捨棄法至十位數): ${tax} 元\n`;
+
+                // 計算月平均稅額
+                const monthlyTax = Math.floor(tax / 12);
+                calculationProcess += `月平均應扣稅額: ${monthlyTax} 元\n`;
+                tax = monthlyTax; // 將稅額設為月平均稅額
             }
         } else if (special === true) {
             // 處理退職所得-一次領取的特殊情況
@@ -182,17 +203,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // 計算二代健保補充保費
         if (healthStatus === 'normal' && amount >= 20000) {
             healthInsurance = amount * 0.0211;
-            calculationProcess += `\n二代健保補充保費 = ${amount} * 2.11% = ${healthInsurance} 元\n`;
+            if (incomeType === "薪資-固定薪資（有填免稅額申報表）") {
+                healthInsurance /= 12; // 如果是月薪，則計算每月的補充保費
+            }
+            calculationProcess += `\n二代健保補充保費 = ${healthInsurance.toFixed(2)} 元\n`;
         } else {
             calculationProcess += `\n不需繳納二代健保補充保費\n`;
         }
 
-        const actualPayment = amount - tax - healthInsurance;
-        calculationProcess += `\n實際支付金額 = 給付金額 - 應扣繳稅額 - 二代健保補充保費\n`;
-        calculationProcess += `                = ${amount} - ${tax} - ${healthInsurance} = ${actualPayment} 元`;
+        const actualPayment = (incomeType === "薪資-固定薪資（有填免稅額申報表）" ? amount / 12 : amount) - tax - healthInsurance;
+        calculationProcess += `\n實際支付金額 = ${incomeType === "薪資-固定薪資（有填免稅額申報表）" ? "月薪" : "給付金額"} - 應扣繳稅額 - 二代健保補充保費\n`;
+        calculationProcess += `                = ${(incomeType === "薪資-固定薪資（有填免稅額申報表）" ? amount / 12 : amount).toFixed(2)} - ${tax} - ${healthInsurance.toFixed(2)} = ${actualPayment.toFixed(2)} 元`;
 
         displayResult({
-            income: amount,
+            income: incomeType === "薪資-固定薪資（有填免稅額申報表）" ? amount / 12 : amount,
             incomeTax: tax,
             healthInsurance: healthInsurance,
             actualPayment: actualPayment
@@ -210,4 +234,6 @@ document.addEventListener('DOMContentLoaded', function() {
         resultDiv.style.display = 'block';
         calculationDiv.style.display = 'block';
     }
+
+    updateAmountLabel();
 });
