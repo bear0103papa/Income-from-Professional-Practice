@@ -1,37 +1,6 @@
 @keyframes move-background {
-  from {
-    -webkit-transform: translate3d(0px, 0px, 0px);
-  }
-  to { 
-    -webkit-transform: translate3d(1000px, 0px, 0px);
-  }
-}
-
-@-webkit-keyframes move-background {
-  from {
-    -webkit-transform: translate3d(0px, 0px, 0px);
-  }
-  to { 
-    -webkit-transform: translate3d(1000px, 0px, 0px);
-  }
-}
-
-@-moz-keyframes move-background {    
-  from {
-    -webkit-transform: translate3d(0px, 0px, 0px);
-  }
-  to { 
-    -webkit-transform: translate3d(1000px, 0px, 0px);
-  }
-}
-
-@-webkit-keyframes move-background {
-  from {
-    -webkit-transform: translate3d(0px, 0px, 0px);
-  }
-  to { 
-    -webkit-transform: translate3d(1000px, 0px, 0px);
-  }
+  from { transform: translate3d(0px, 0px, 0px); }
+  to { transform: translate3d(1000px, 0px, 0px); }
 }
 
 body {
@@ -41,6 +10,7 @@ body {
     padding: 0;
     color: #ffffff;
     background: #000000;
+    font-size: 18px;
 }
 
 .container {
@@ -53,20 +23,24 @@ body {
 
 h1, h2 {
     text-align: center;
+    font-size: 2em;
 }
 
 label {
     display: block;
-    margin: 10px 0 5px;
+    margin: 20px 0 10px;
+    font-size: 1.2em;
 }
 
 select, input, button {
     width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
     background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.5);
     color: #ffffff;
+    font-size: 1.1em;
+    border-radius: 10px;
 }
 
 button {
@@ -74,33 +48,32 @@ button {
     color: white;
     border: none;
     cursor: pointer;
+    font-size: 1.2em;
+    transition: background 0.3s ease;
 }
 
 button:hover {
     background: #45a049;
 }
 
-#result, #calculation, #imageResult {
-    margin-top: 20px;
+#result, #imageResult {
+    margin-top: 30px;
     background: rgba(255, 255, 255, 0.1);
     padding: 20px;
-    border-radius: 5px;
+    border-radius: 10px;
+    font-size: 1.1em;
 }
 
 #specialHealthInfo {
     background: rgba(255, 0, 0, 0.1);
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 10px;
-}
-
-pre {
-    white-space: pre-wrap;
-    word-wrap: break-word;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 1em;
 }
 
 .stars, .twinkling, .clouds {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
@@ -129,8 +102,28 @@ pre {
 }
 
 #contactInfo {
-    margin-top: 20px;
+    margin-top: 30px;
     background: rgba(255, 255, 255, 0.1);
     padding: 20px;
-    border-radius: 5px;
+    border-radius: 10px;
+    font-size: 1em;
+}
+
+@media (max-width: 600px) {
+    body {
+        font-size: 16px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+
+    h1, h2 {
+        font-size: 1.5em;
+    }
+
+    select, input, button {
+        padding: 10px;
+        font-size: 1em;
+    }
 }
