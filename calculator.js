@@ -44,6 +44,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
     function updateIncomeTypes() {
         const status = statusSelect.value;
         incomeTypeSelect.innerHTML = '';
@@ -86,11 +90,15 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('input', calculateTax);
     });
 
+    amountInput.addEventListener('blur', function() {
+        this.value = formatNumber(parseFloat(this.value.replace(/,/g, '')));
+    });
+
     function calculateTax() {
         const status = statusSelect.value;
         const incomeType = incomeTypeSelect.value;
         const healthStatus = healthStatusSelect.value;
-        let amount = parseFloat(amountInput.value);
+        let amount = parseFloat(amountInput.value.replace(/,/g, ''));
         const dependents = parseInt(dependentsInput.value) || 0;
 
         if (isNaN(amount)) return;
@@ -102,25 +110,25 @@ document.addEventListener('DOMContentLoaded', function() {
         let calculationProcess = '';
 
         if (incomeType === "薪資-固定薪資（有填免稅額申報表）") {
-            calculationProcess += `員工薪資（月薪）: ${amount} 元\n`;
+            calculationProcess += `員工薪資（月薪）: ${formatNumber(amount)} 元\n`;
             amount *= 12;
-            calculationProcess += `年薪 (月薪 * 12): ${amount} 元\n\n`;
+            calculationProcess += `年薪 (月薪 * 12): ${formatNumber(amount)} 元\n\n`;
         } else {
-            calculationProcess += `給付金額: ${amount} 元\n`;
+            calculationProcess += `給付金額: ${formatNumber(amount)} 元\n`;
         }
 
         if (special === 'progressive') {
             const baseExemption = 97000;
             const totalExemption = baseExemption * (dependents + 1);
             const salaryDeduction = 262000;
-            const standardDeduction = 21800;
+            const standardDeduction = 218000; // 修正標準扣除額
             let netIncome = amount - totalExemption - salaryDeduction - standardDeduction;
 
             calculationProcess += `計算應稅所得淨額:\n`;
             calculationProcess += `受扶養親屬人數: ${dependents}\n`;
-            calculationProcess += `總免稅額: ${baseExemption} * (${dependents} + 1) = ${totalExemption} 元\n`;
+            calculationProcess += `總免稅額: ${formatNumber(baseExemption)} * (${dependents} + 1) = ${formatNumber(totalExemption)} 元\n`;
             calculationProcess += `年薪 - 總免稅額 - 薪資扣除額 - 標準扣除額\n`;
-            calculationProcess += `${amount} - ${totalExemption} - ${salaryDeduction} - ${standardDeduction} = ${netIncome} 元\n\n`;
+            calculationProcess += `${formatNumber(amount)} - ${formatNumber(totalExemption)} - ${formatNumber(salaryDeduction)} - ${formatNumber(standardDeduction)} = ${formatNumber(netIncome)} 元\n\n`;
 
             if (netIncome <= 0) {
                 tax = 0;
@@ -144,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         let taxInThisBracket = taxableInThisBracket * bracket.rate;
                         tax += taxInThisBracket;
 
-                        calculationProcess += `${previousLimit} 到 ${bracket.limit} 之間的所得: ${taxableInThisBracket} 元, 稅率 ${bracket.rate * 100}%, 稅額 ${taxInThisBracket} 元\n`;
+                        calculationProcess += `${formatNumber(previousLimit)} 到 ${formatNumber(bracket.limit)} 之間的所得: ${formatNumber(taxableInThisBracket)} 元, 稅率 ${bracket.rate * 100}%, 稅額 ${formatNumber(taxInThisBracket)} 元\n`;
 
                         remainingIncome -= taxableInThisBracket;
                         previousLimit = bracket.limit;
@@ -155,11 +163,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // 完全捨棄法至十位數
                 tax = Math.floor(tax / 10) * 10;
-                calculationProcess += `\n年度稅額 (完全捨棄法至十位數): ${tax} 元\n`;
+                calculationProcess += `\n年度稅額 (完全捨棄法至十位數): ${formatNumber(tax)} 元\n`;
 
                 // 計算月平均稅額
                 const monthlyTax = Math.floor(tax / 12);
-                calculationProcess += `月平均應扣稅額: ${monthlyTax} 元\n`;
+                calculationProcess += `月平均應扣稅額: ${formatNumber(monthlyTax)} 元\n`;
                 tax = monthlyTax; // 將稅額設為月平均稅額
             }
         } else if (special === true) {
@@ -169,8 +177,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const limit2 = 377000 * years;
 
             calculationProcess += `退職服務年資: ${years} 年\n`;
-            calculationProcess += `第一級距上限 (188,000 * 年資): ${limit1} 元\n`;
-            calculationProcess += `第二級距上限 (377,000 * 年資): ${limit2} 元\n\n`;
+            calculationProcess += `第一級距上限 (188,000 * 年資): ${formatNumber(limit1)} 元\n`;
+            calculationProcess += `第二級距上限 (377,000 * 年資): ${formatNumber(limit2)} 元\n\n`;
 
             if (amount <= limit1) {
                 taxableAmount = 0;
@@ -178,26 +186,26 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (amount <= limit2) {
                 taxableAmount = (amount - limit1) / 2;
                 calculationProcess += `給付金額超過第一級距但不超過第二級距\n`;
-                calculationProcess += `應稅金額 = (給付金額 - 第一級距上限) / 2 = (${amount} - ${limit1}) / 2 = ${taxableAmount} 元\n`;
+                calculationProcess += `應稅金額 = (給付金額 - 第一級距上限) / 2 = (${formatNumber(amount)} - ${formatNumber(limit1)}) / 2 = ${formatNumber(taxableAmount)} 元\n`;
             } else {
                 taxableAmount = (limit2 - limit1) / 2 + (amount - limit2);
                 calculationProcess += `給付金額超過第二級距\n`;
                 calculationProcess += `應稅金額 = (第二級距上限 - 第一級距上限) / 2 + (給付金額 - 第二級距上限)\n`;
-                calculationProcess += `           = (${limit2} - ${limit1}) / 2 + (${amount} - ${limit2}) = ${taxableAmount} 元\n`;
+                calculationProcess += `           = (${formatNumber(limit2)} - ${formatNumber(limit1)}) / 2 + (${formatNumber(amount)} - ${formatNumber(limit2)}) = ${formatNumber(taxableAmount)} 元\n`;
             }
             tax = taxableAmount * rate;
         } else {
             taxableAmount = amount > threshold ? amount : 0;
             if (taxableAmount > 0) {
-                calculationProcess += `給付金額超過起扣點 ${threshold} 元，全額計算稅額\n`;
+                calculationProcess += `給付金額超過起扣點 ${formatNumber(threshold)} 元，全額計算稅額\n`;
                 tax = taxableAmount * rate;
             } else {
-                calculationProcess += `給付金額未超過起扣點 ${threshold} 元，免稅\n`;
+                calculationProcess += `給付金額未超過起扣點 ${formatNumber(threshold)} 元，免稅\n`;
             }
         }
 
         if (!special) {
-            calculationProcess += `應扣繳稅額 = ${taxableAmount} * ${rate} = ${tax} 元\n`;
+            calculationProcess += `應扣繳稅額 = ${formatNumber(taxableAmount)} * ${rate} = ${formatNumber(tax)} 元\n`;
         }
 
         // 計算二代健保補充保費
@@ -206,14 +214,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (incomeType === "薪資-固定薪資（有填免稅額申報表）") {
                 healthInsurance /= 12; // 如果是月薪，則計算每月的補充保費
             }
-            calculationProcess += `\n二代健保補充保費 = ${healthInsurance.toFixed(2)} 元\n`;
+            calculationProcess += `\n二代健保補充保費 = ${formatNumber(healthInsurance)} 元\n`;
         } else {
             calculationProcess += `\n不需繳納二代健保補充保費\n`;
         }
 
         const actualPayment = (incomeType === "薪資-固定薪資（有填免稅額申報表）" ? amount / 12 : amount) - tax - healthInsurance;
         calculationProcess += `\n實際支付金額 = ${incomeType === "薪資-固定薪資（有填免稅額申報表）" ? "月薪" : "給付金額"} - 應扣繳稅額 - 二代健保補充保費\n`;
-        calculationProcess += `                = ${(incomeType === "薪資-固定薪資（有填免稅額申報表）" ? amount / 12 : amount).toFixed(2)} - ${tax} - ${healthInsurance.toFixed(2)} = ${actualPayment.toFixed(2)} 元`;
+        calculationProcess += `                = ${formatNumber(incomeType === "薪資-固定薪資（有填免稅額申報表）" ? amount / 12 : amount)} - ${formatNumber(tax)} - ${formatNumber(healthInsurance)} = ${formatNumber(actualPayment)} 元`;
 
         displayResult({
             income: incomeType === "薪資-固定薪資（有填免稅額申報表）" ? amount / 12 : amount,
@@ -224,10 +232,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function displayResult(result, calculationProcess) {
-        document.getElementById('income').textContent = result.income.toFixed(2);
-        document.getElementById('incomeTax').textContent = result.incomeTax.toFixed(2);
-        document.getElementById('healthInsurance').textContent = result.healthInsurance.toFixed(2);
-        document.getElementById('actualPayment').textContent = result.actualPayment.toFixed(2);
+        document.getElementById('income').textContent = formatNumber(result.income);
+        document.getElementById('incomeTax').textContent = formatNumber(result.incomeTax);
+        document.getElementById('healthInsurance').textContent = formatNumber(result.healthInsurance);
+        document.getElementById('actualPayment').textContent = formatNumber(result.actualPayment);
 
         document.getElementById('calculationProcess').textContent = calculationProcess;
 
